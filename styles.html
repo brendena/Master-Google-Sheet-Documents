@@ -1,0 +1,80 @@
+  <style>
+  .buttonMain{
+    background: white;
+    font-size: 18px;
+    white-space: initial;
+    flex:1;
+    margin:0;
+    height:100%;
+    border:0;
+    transition:1s;
+  }
+  
+  .buttonMain:hover{
+    border:0px;
+  }
+  
+  #header{
+    background: #19B500;
+    color: white;
+  }
+  body{
+    display:flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100vh;
+    margin: 0;
+    
+  }
+  #trashIcon{
+    position:fixed;
+    left:20px;
+    cursor: pointer;
+    transition: 1s;
+    fill:white;
+  }
+  #trashIcon:hover{
+    fill: green;
+  }
+  #reload { 
+    font-family: Lucida Sans Unicode;
+    position:fixed;
+    right:20px;
+    font-size: 40px;
+    cursor: pointer;
+    transition:1s;
+  }
+  #reload:hover{
+    color: green;
+    transform:rotate(90deg)
+  }
+  #activeMasterDocuments{
+    height:100%;
+    display:flex;
+    flex-direction: column;
+  }
+  #activeMasterDocuments > div{
+    width:100%;
+    flex: 1;
+    background: #FFD66A;;
+    border-top: 1px solid black;
+    text-align: center;
+    display:flex;
+  }
+  .deleteActiveDocument{
+    position:fixed;
+    right:20px;
+  }
+  #menuButtons{
+    display:flex;
+    height: 90px;
+    
+  }
+  #nothingSelectedMessage{
+  
+  }
+  .centerText{
+   text-align:center;
+   margin:auto;
+  }
+  </style>

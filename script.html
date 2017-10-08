@@ -1,0 +1,158 @@
+
+  <script>
+    //pikcer
+    
+    var DIALOG_DIMENSIONS = {width: 600, height: 425};
+    var pickerApiLoaded = false;
+    var documentType = "";
+
+    /**
+     * Loads the Google Picker API.
+     */
+    function onApiLoad() {
+      gapi.load('picker', {'callback': function() {
+        pickerApiLoaded = true;
+      }});
+     }
+
+
+    /**
+     * Gets the user's OAuth 2.0 access token from the server-side script so that
+     * it can be passed to Picker. This technique keeps Picker from needing to
+     * show its own authorization dialog, but is only possible if the OAuth scope
+     * that Picker needs is available in Apps Script. Otherwise, your Picker code
+     * will need to declare its own OAuth scopes.
+     */
+    function getOAuthToken(typeOfPicker) {
+      //genericSpreadSheet
+      //googleSheet
+      documentType = typeOfPicker;
+      google.script.run.withSuccessHandler( createPicker)
+        .withFailureHandler(showError).getOAuthToken();
+      
+    }
+
+    /**
+     * Creates a Picker that can access the user's spreadsheets. This function
+     * uses advanced options to hide the Picker's left navigation panel and
+     * default title bar.
+     *
+     * @param {string} token An OAuth 2.0 access token that lets Picker access the
+     *     file type specified in the addView call.
+     */
+     
+     function createPicker(token){
+       if (pickerApiLoaded && token) {
+        var typeOfViewPicker;
+        if(documentType === "genericSpreadSheet"){
+          typeOfViewPicker = google.picker.ViewId.DOCS
+        }
+        else if(documentType == "googleSheet"){
+           typeOfViewPicker = google.picker.ViewId.SPREADSHEETS 
+        }
+        var picker = new google.picker.PickerBuilder()
+            // Instruct Picker to display only spreadsheets in Drive. For other
+            // views, see https://developers.google.com/picker/docs/#otherviews
+            .addView(typeOfViewPicker)
+            // Hide the navigation panel so that Picker fills more of the dialog.
+            .enableFeature(google.picker.Feature.NAV_HIDDEN)
+            // Hide the title bar since an Apps Script dialog already has a title.
+            .hideTitleBar()
+            .setOAuthToken(token)
+            .setDeveloperKey(DEVELOPER_KEY)
+            .setCallback(documentSelectedCallback)
+            .setOrigin(google.script.host.origin)
+            // Instruct Picker to fill the dialog, minus 2 pixels for the border.
+            .setSize(DIALOG_DIMENSIONS.width - 2,
+                DIALOG_DIMENSIONS.height - 2)
+            .build();
+        picker.setVisible(true);
+      } else {
+        showError('Unable to load the file picker.');
+      }
+     }
+     
+    function documentSelectedCallback(data){
+      
+      var action = data[google.picker.Response.ACTION];
+      if (action == google.picker.Action.PICKED) {   
+        var doc = data[google.picker.Response.DOCUMENTS][0];
+        var nameDocument = doc[google.picker.Document.NAME];
+        var idDocument = doc[google.picker.Document.ID];
+        //alert(nameDocument)
+        if(documentType === "genericSpreadSheet"){
+          google.script.run.withSuccessHandler(finished)
+          .withFailureHandler(showError).selectedGenericSpreadSheet(nameDocument,idDocument);
+        }
+        else if(documentType == "googleSheet"){
+          google.script.run.withSuccessHandler(finished)
+          .withFailureHandler(showError).selectedGoogleSpreadSheet(nameDocument,idDocument);
+        }
+      }
+    }
+    
+    function finished(data){
+      getListActiveMasterDocuments();
+    }
+
+    function combineData(){
+      google.script.run.withSuccessHandler(finished)
+        .withFailureHandler(showError).combineAllFileIntoOne();
+    }
+
+    /**
+     * Displays an error message within the #result element.
+     *
+     * @param {string} message The error message to display.
+     */
+    function showError(message) {
+      document.getElementById('result').innerHTML = 'Error: ' + message;
+    }
+    
+    
+    function getListActiveMasterDocuments(data){
+      google.script.run.withSuccessHandler(function(data){
+        console.log(data)
+        var activedocumentContainer = document.getElementById("activeMasterDocuments");
+        activedocumentContainer.innerHTML = "";
+        data.forEach(function(activeDocument){
+          var pTag = document.createElement("p")
+          pTag.innerHTML = activeDocument.name;
+          pTag.className="centerText";
+          var element = document.createElement("div");
+          var span = document.createElement("span");
+          span.innerHTML = "x"
+          span.onclick = removeActiveDocument;
+          span.className = "deleteActiveDocument"
+          span.id = activeDocument.id;
+          pTag.append(span);
+          element.append(pTag);
+          activedocumentContainer.append(element);
+          
+        })
+        if(data.length == 0){
+          var element = document.createElement("div");
+          var pTag = document.createElement("p")
+          
+          pTag.innerHTML = "currently no master documents";
+          pTag.className="centerText";
+          element.id = "nothingSelectedMessage"
+          element.append(pTag);
+          activedocumentContainer.append(element)
+        }
+      }).withFailureHandler(showError).getActiveDocuments();
+    
+    }
+    
+    function removeActiveDocument(event){
+      var removedId = event['srcElement']['id'];
+      google.script.run.withSuccessHandler(finished)
+          .withFailureHandler(showError).removeDocumentId(removedId);
+    }
+    
+    function removeAllActiveDocuments(){
+      google.script.run.withSuccessHandler(finished)
+       .withFailureHandler(showError).resetActiveDocuments();
+    }
+    getListActiveMasterDocuments();
+  </script>

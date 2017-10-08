@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <base target="_top">
+  <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
+  <?!= include('styles'); ?>
+  <?!= include('script'); ?>
+</head>
+<body>
+  <div id="header">
+     <p style="text-align:center; font-size:20px;">
+       <?!= include('trashIcon'); ?>
+       Select Master File
+       <span id="reload" onclick="combineData()">&#x21bb;</span>
+     </p>
+  </div>
+  <div id="result"></div>
+  <div id="menuButtons">
+    <button onclick='getOAuthToken("genericSpreadSheet")'  class="buttonMain" >Select a generic spreadsheet</button>
+    <button onclick='getOAuthToken("googleSheet")' class="buttonMain">Select a existing google sheet</button>
+  </div>
+  <div id="activeMasterDocuments">
+  </div>
+  <script src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
+</body>
+</html>
+
