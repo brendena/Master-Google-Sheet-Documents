@@ -6,17 +6,15 @@ var supportedFiles = ["xls","csv","ods","xlsx"];
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Master Sheet')
-      .addItem('Start', 'showPicker')
+      .addItem('Configer', 'showPicker')
+      .addItem('refresh SpreadSheets', 'combineAllFileIntoOne')
       .addToUi();
    Logger.log("started");
 }
 
 
 function onInstall(){
-  ScriptApp.newTrigger('combineAllFileIntoOne')
-      .timeBased()
-      .everyHours(1)
-      .create();
+  onOpen();
 }
 
 
@@ -25,16 +23,13 @@ function onInstall(){
  * JavaScript code for the Google Picker API.
  */
 function showPicker() {
-  var html = doGet().setWidth(600).setHeight(425);
-  SpreadsheetApp.getUi().showModalDialog(html, 'Compact SpreedSheet - Config Menu');
-}
-
-
-function doGet() {
-  return HtmlService
+  var html = HtmlService
       .createTemplateFromFile('Page')
-      .evaluate();
+      .evaluate().setWidth(600).setHeight(425);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Master Google Sheet Documents - Config Menu');
 }
+
+
 
 
 function include(filename) {
@@ -86,33 +81,46 @@ all files into one google sheets page.
 function combineAllFileIntoOne(){
   try{
     Logger.log("combining stuff")
-    var documentIds = getDocumentIdsArray();
-    Logger.log(documentIds)
+    var documentIds = getSpecificSavedProperties("documentId");
+    //Logger.log(documentIds)
     documentIds.forEach(function(documentId){
       var concatSpreadSheetFile = DriveApp.getFileById(documentId);
       //get files parent 
       var parentDirectory = concatSpreadSheetFile.getParents().next();
       var searchParameter = createSearchParameters(); 
-      
-      Logger.log( searchParameter);
+      //Logger.log(parentDirectory.getName())
+      //Logger.log( searchParameter);
       var files = parentDirectory.searchFiles(searchParameter);
+      //var files = parentDirectory.getFiles();
       if(files.hasNext()){
         var concatSpreadSheetObject = SpreadsheetApp.open(concatSpreadSheetFile);
         var firstSheet = concatSpreadSheetObject.getSheets()[0]
         var lastRow = firstSheet.getLastRow();
        
         while (files.hasNext()) {
-          Logger.log("going through")
+        
+          
           var file = files.next();
-          var createdSpreadSheetFile = convertDocument(file);
-          
-          var fileSpreadSheet = SpreadsheetApp.open(createdSpreadSheetFile).getSheets()[0];
-          var pastingValue = fileSpreadSheet.getRange(2,1,fileSpreadSheet.getLastRow(),fileSpreadSheet.getLastColumn()).getValues();
-          firstSheet.getRange(lastRow, 1, fileSpreadSheet.getLastRow(), fileSpreadSheet.getLastColumn()).setValues(pastingValue);
-          
-          lastRow += fileSpreadSheet.getLastRow() - 1;
-          parentDirectory.removeFile(file);
-          DriveApp.getRootFolder().removeFile(createdSpreadSheetFile);
+          //Logger.log("going through")
+          //Logger.log(file.getName())
+          //Logger.log(file.getMimeType());
+          ///*
+          if(file.getId() != concatSpreadSheetObject.getId()){
+            var createdSpreadSheetFile = file;
+            if(file.getMimeType() != "application/vnd.google-apps.spreadsheet")
+              createdSpreadSheetFile = convertDocument(file);
+              
+            
+            
+            var fileSpreadSheet = SpreadsheetApp.open(createdSpreadSheetFile).getSheets()[0];
+            var pastingValue = fileSpreadSheet.getRange(2,1,fileSpreadSheet.getLastRow(),fileSpreadSheet.getLastColumn()).getValues();
+            firstSheet.getRange(lastRow, 1, fileSpreadSheet.getLastRow(), fileSpreadSheet.getLastColumn()).setValues(pastingValue);
+            
+            parentDirectory.removeFile(file);
+            lastRow += fileSpreadSheet.getLastRow() - 1;
+            DriveApp.getRootFolder().removeFile(createdSpreadSheetFile);
+          }
+          //*/
         }
       }
     });
@@ -126,15 +134,21 @@ function combineAllFileIntoOne(){
 /*~~~~~~~~Functions used by Page.html~~~~~~~~~~~~~~~~~~~~ */
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 function selectedGenericSpreadSheet(name, id){
-  
   var newId = convertGenericDocument(name,id);
-  Logger.log(id);
-  var newName = name.split(".")[0]
-  selectedGoogleSpreadSheet(newName,newId);
+  if(newId != 0){
+    var newName = name.split(".")[0]
+    Logger.log(newId);
+    selectedGoogleSpreadSheet(newName,newId);
+  }
 }
 
 function selectedGoogleSpreadSheet(name, id){
-  saveDocumentInfo(id)
+  var documentId = getSpecificSavedProperties("documentId");
+  
+  if(documentId == undefined)
+    documentId = []
+  documentId.push(id)
+  savePropertie("documentId", documentId);
   combineAllFileIntoOne();  
 }
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

@@ -5,6 +5,7 @@
   <base target="_top">
   <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
   <?!= include('styles'); ?>
+  <?!= include('key'); ?>
   <?!= include('script'); ?>
 </head>
 <body>
@@ -17,8 +18,12 @@
   </div>
   <div id="result"></div>
   <div id="menuButtons">
-    <button onclick='getOAuthToken("genericSpreadSheet")'  class="buttonMain" >Select a generic spreadsheet</button>
-    <button onclick='getOAuthToken("googleSheet")' class="buttonMain">Select a existing google sheet</button>
+    <button class="buttonMain" onclick='getOAuthToken("csv")'>csv</button>
+    <button class="buttonMain" onclick='getOAuthToken("xls")'>xls</button>
+    <button class="buttonMain" onclick='getOAuthToken("ods")'>ods</button>
+    <button class="buttonMain" onclick='getOAuthToken("xlsx")'>xlsx</button>
+    <button class="buttonMain" onclick='getOAuthToken("GoogleSheet")'>google sheet</button>
+    <button class="buttonMain" onclick='getHelpPage()'>help</button>
   </div>
   <div id="activeMasterDocuments">
   </div>

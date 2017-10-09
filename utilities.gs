@@ -41,23 +41,37 @@ function createSearchParameters(){
       searchParameter += " or "
     }
   }
+  searchParameter += " or mimeType = 'application/vnd.google-apps.spreadsheet'" 
   return searchParameter;
 }
 
 
 function getActiveDocuments(){
-  var documentIds = getDocumentIdsArray();
-  var documentIdsObjectArray = documentIds.map(function(documentId){
-    
-    return {"name":DriveApp.getFileById(documentId).getName(), "id":documentId}
-  });
-
+  var documentIds = getSpecificSavedProperties("documentId");
+  var documentIdsObjectArray = [];
+  if(documentIds != undefined){
+    documentIdsObjectArray = documentIds.map(function(documentId){
+      return {"name": DriveApp.getFileById(documentId).getName(), "id":documentId}
+    });
+  }
+  Logger.log(documentIds)
   return documentIdsObjectArray;
+}
+
+function removeDocumentId(id){
+  var documentId = getSpecificSavedProperties("documentId");
+  if(documentId == undefined)
+    documentId = []
+  var i = documentId.indexOf(id);
+  if(i != -1) {
+      documentId.splice(i, 1);
+  }
+  saveProperties(documentId);
 }
 
 
 function resetActiveDocuments(){
-  resetDocumentInfo();
+  resetProperties();
 }
 
 

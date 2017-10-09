@@ -1,5 +1,6 @@
 
   <script>
+    //https://developers.google.com/picker/docs/
     //pikcer
     
     var DIALOG_DIMENSIONS = {width: 600, height: 425};
@@ -44,16 +45,28 @@
      function createPicker(token){
        if (pickerApiLoaded && token) {
         var typeOfViewPicker;
-        if(documentType === "genericSpreadSheet"){
-          typeOfViewPicker = google.picker.ViewId.DOCS
+        var view = new google.picker.DocsView(google.picker.ViewId.DOCS);
+        if(documentType != "csv" && documentType != "GoogleSheet")
+        {
+          view.setMode(google.picker.DocsViewMode.LIST)
+          view.setQuery("*." + documentType)
         }
-        else if(documentType == "googleSheet"){
-           typeOfViewPicker = google.picker.ViewId.SPREADSHEETS 
+        else if(documentType == "GoogleSheet"){
+           view = google.picker.ViewId.SPREADSHEETS 
         }
+        else if(documentType = "csv"){
+          view.setMode(google.picker.DocsViewMode.LIST);
+          view.setMimeTypes("text/csv");
+        }
+        var group = new google.picker.ViewGroup(google.picker.ViewId.DOCS)
+        group.addLabel("test").addLabel("test2");
+        group.addView(google.picker.ViewId.DOCUMENTS).
+                addView(google.picker.ViewId.PRESENTATIONS)
         var picker = new google.picker.PickerBuilder()
             // Instruct Picker to display only spreadsheets in Drive. For other
             // views, see https://developers.google.com/picker/docs/#otherviews
-            .addView(typeOfViewPicker)
+ 
+            .addView(view)
             // Hide the navigation panel so that Picker fills more of the dialog.
             .enableFeature(google.picker.Feature.NAV_HIDDEN)
             // Hide the title bar since an Apps Script dialog already has a title.
@@ -65,8 +78,10 @@
             // Instruct Picker to fill the dialog, minus 2 pixels for the border.
             .setSize(DIALOG_DIMENSIONS.width - 2,
                 DIALOG_DIMENSIONS.height - 2)
-            .build();
-        picker.setVisible(true);
+                
+            //.setTitle("pick a spreadSheet File")
+            
+        picker.build().setVisible(true);
       } else {
         showError('Unable to load the file picker.');
       }
@@ -76,17 +91,22 @@
       
       var action = data[google.picker.Response.ACTION];
       if (action == google.picker.Action.PICKED) {   
+        /*Error Handling None Proper Document*/
         var doc = data[google.picker.Response.DOCUMENTS][0];
         var nameDocument = doc[google.picker.Document.NAME];
         var idDocument = doc[google.picker.Document.ID];
-        //alert(nameDocument)
-        if(documentType === "genericSpreadSheet"){
-          google.script.run.withSuccessHandler(finished)
-          .withFailureHandler(showError).selectedGenericSpreadSheet(nameDocument,idDocument);
-        }
-        else if(documentType == "googleSheet"){
+        console.log(nameDocument);
+        console.log(idDocument)
+        if(documentType === "GoogleSheet"){
+          console.log("Google Sheet")
           google.script.run.withSuccessHandler(finished)
           .withFailureHandler(showError).selectedGoogleSpreadSheet(nameDocument,idDocument);
+        }
+        else{
+          console.log("generic document")
+          google.script.run.withSuccessHandler(finished)
+            .withFailureHandler(showError).selectedGenericSpreadSheet(nameDocument,idDocument);
+          
         }
       }
     }
@@ -112,6 +132,7 @@
     
     function getListActiveMasterDocuments(data){
       google.script.run.withSuccessHandler(function(data){
+        console.log("all active documents")
         console.log(data)
         var activedocumentContainer = document.getElementById("activeMasterDocuments");
         activedocumentContainer.innerHTML = "";
@@ -155,4 +176,11 @@
        .withFailureHandler(showError).resetActiveDocuments();
     }
     getListActiveMasterDocuments();
+    function getHelpPage(){
+      alert("First Make sure the document you want have the same column type and are all in a designated folder. \n\n" + 
+      
+      "Then select a document type in the white nav bar and a document ui picker will come up.  Then select the document you want to be merged into. \n\n" +
+      
+      "Once its done you will see a new yellow row on the bottom of the navigation.")
+    }
   </script>
