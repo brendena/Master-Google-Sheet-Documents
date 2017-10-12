@@ -2,7 +2,11 @@
 /**
  * Creates a custom menu in Google Sheets when the spreadsheet opens.
  */
-var supportedFiles = ["xls","csv","ods","xlsx"];
+function PropertiesTypes(){
+  return {
+     "documentId":[]
+   }
+}
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Master Sheet')
@@ -17,6 +21,14 @@ function onInstall(){
   onOpen();
 }
 
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename)
+      .getContent();
+}
+
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/*~~~~~~~~Functions used by Page.html~~~~~~~~~~~~~~~~~~~~ */
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /**
  * Displays an HTML-service dialog in Google Sheets that contains client-side
@@ -30,127 +42,65 @@ function showPicker() {
 }
 
 
-
-
-function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename)
-      .getContent();
-}
-
-/*
-Converts csv file to google spreedsheet
-and delete original file
-*/
-function convertGenericDocument(name,id){
-  var nameArray = name.split(".")
-  var fileName = nameArray[0];
-  var extension = nameArray[1];
-  var extensionId = -1;
-  if(supportedFiles.indexOf(extension) > -1){
-    Logger.log("converting file")
-    try {
-      
-      //Get generic document
-      var genericSpreadSheet = DriveApp.getFileById(id);
-      //get files parent 
-      var parentDirectory = genericSpreadSheet.getParents().next();
-      var createdSpreadSheetFile = convertDocument(genericSpreadSheet);
-      
-      //append to parent directory
-      parentDirectory.addFile(createdSpreadSheetFile);
-      
-      //remove the spreedsheet from root but doesn't remove child.
-      DriveApp.getRootFolder().removeFile(createdSpreadSheetFile);
-      //remove original document
-      //parentDirectory.removeFile(genericSpreadSheet)
-      
-      //return the newly created file id to be store persistant storage 
-      extensionId =  createdSpreadSheetFile.getId()
-      
-    } catch (f) {
-      Logger.log(f.toString());
-    }
-    
-  }
-  return extensionId;
-}
-/*
-Will loop through a directory and concat 
-all files into one google sheets page.
-*/
-function combineAllFileIntoOne(){
-  try{
-    Logger.log("combining stuff")
-    var documentIds = getSpecificSavedProperties("documentId");
-    //Logger.log(documentIds)
-    documentIds.forEach(function(documentId){
-      var concatSpreadSheetFile = DriveApp.getFileById(documentId);
-      //get files parent 
-      var parentDirectory = concatSpreadSheetFile.getParents().next();
-      var searchParameter = createSearchParameters(); 
-      //Logger.log(parentDirectory.getName())
-      //Logger.log( searchParameter);
-      var files = parentDirectory.searchFiles(searchParameter);
-      //var files = parentDirectory.getFiles();
-      if(files.hasNext()){
-        var concatSpreadSheetObject = SpreadsheetApp.open(concatSpreadSheetFile);
-        var firstSheet = concatSpreadSheetObject.getSheets()[0]
-        var lastRow = firstSheet.getLastRow();
-       
-        while (files.hasNext()) {
-        
-          
-          var file = files.next();
-          //Logger.log("going through")
-          //Logger.log(file.getName())
-          //Logger.log(file.getMimeType());
-          ///*
-          if(file.getId() != concatSpreadSheetObject.getId()){
-            var createdSpreadSheetFile = file;
-            if(file.getMimeType() != "application/vnd.google-apps.spreadsheet")
-              createdSpreadSheetFile = convertDocument(file);
-              
-            
-            
-            var fileSpreadSheet = SpreadsheetApp.open(createdSpreadSheetFile).getSheets()[0];
-            var pastingValue = fileSpreadSheet.getRange(2,1,fileSpreadSheet.getLastRow(),fileSpreadSheet.getLastColumn()).getValues();
-            firstSheet.getRange(lastRow, 1, fileSpreadSheet.getLastRow(), fileSpreadSheet.getLastColumn()).setValues(pastingValue);
-            
-            parentDirectory.removeFile(file);
-            lastRow += fileSpreadSheet.getLastRow() - 1;
-            DriveApp.getRootFolder().removeFile(createdSpreadSheetFile);
-          }
-          //*/
-        }
-      }
+function getActiveDocuments(){
+  var documentIds = getSpecificSavedProperties("documentId");
+  Logger.log(documentIds);
+  var documentIdsObjectArray = [];
+  if(documentIds != undefined){
+    documentIdsObjectArray = documentIds.map(function(documentId){
+      return {"name": DriveApp.getFileById(documentId).getName(), "id":documentId}
     });
-  } catch (f) {
-    Logger.log(f.toString());
   }
+  
+  return documentIdsObjectArray;
 }
-         
                              
-/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-/*~~~~~~~~Functions used by Page.html~~~~~~~~~~~~~~~~~~~~ */
-/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-function selectedGenericSpreadSheet(name, id){
-  var newId = convertGenericDocument(name,id);
-  if(newId != 0){
-    var newName = name.split(".")[0]
-    Logger.log(newId);
-    selectedGoogleSpreadSheet(newName,newId);
-  }
+
+function getOAuthToken() {
+  DriveApp.getRootFolder();
+  return ScriptApp.getOAuthToken();
 }
 
-function selectedGoogleSpreadSheet(name, id){
+
+function selectedSpreadSheetFile(id){
+  //var id = "1_kfz4aLHaWDVuYfDt5ZY6nhRjWMTjfFWxTt_D5opYTo";
+  ///*
+  try{
+    convertObjectToSpreadSheet(id);
+  }
+  catch (e){
+    throw "Please select a valid spreadSheet Document";
+  }
+  //*/
   var documentId = getSpecificSavedProperties("documentId");
-  
-  if(documentId == undefined)
-    documentId = []
+  Logger.log(documentId);
+  if(documentId.indexOf(id) != -1)
+    throw "Error you can't have duplicate files"
   documentId.push(id)
+  
   savePropertie("documentId", documentId);
+  
   combineAllFileIntoOne();  
 }
+
+function checkValid(id){
+  var file = DriveApp.getFileById(id)
+  if (checkIfValidFile(file) == false && checkSpreedSheet(file) == false){
+    throw "Please select a valid spreadSheet Document"
+  }
+}
+
+
+
+function removeDocumentId(id){
+  var documentId = getSpecificSavedProperties("documentId");
+  var i = documentId.indexOf(id);
+  if(i != -1) {
+      documentId.splice(i, 1);
+  }
+  saveProperties(documentId);
+}
+
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 /*~~~~End of Functions used by Page.html~~~~~~~~~~~~~~~~~ */
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

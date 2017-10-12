@@ -1,4 +1,17 @@
   <style>
+  #result{
+    padding: 2em;
+  }
+  .deleteActiveDocument{
+    cursor: pointer;
+  }
+  .error {
+    background: #ff8989;
+  }
+  .alert {
+    background: #ff8989;
+    padding: 1em;
+  }
   .buttonMain{
     background: white;
     font-size: 18px;
@@ -12,6 +25,7 @@
   
   .buttonMain:hover{
     border:0px;
+    background: #e3e3e3;;
   }
   
   #header{
@@ -24,6 +38,7 @@
     justify-content: space-between;
     height: 100vh;
     margin: 0;
+    font: 13px/18px arial, sans-serif;
     
   }
   #trashIcon{
@@ -74,7 +89,25 @@
   
   }
   .centerText{
-   text-align:center;
-   margin:auto;
+     text-align:center;
+     margin:auto;
+     font-size: 1.5em;
+  }
+  
+  
+  #helpPage{
+    background: white;
+    width: 93vw;
+    height: 92vh;
+    top: 2vh;
+    z-index: 2;
+    position: fixed;
+    transition: 1s;
+    border: solid 4px;
+    left: 2vw;
+    box-shadow: 10px 10px 0px 0px rgba(0,0,0,0.75);
+  }
+  .hideHelpPage{
+    margin-left: 150vw;
   }
   </style>

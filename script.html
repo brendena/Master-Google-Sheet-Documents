@@ -95,22 +95,16 @@
         var doc = data[google.picker.Response.DOCUMENTS][0];
         var nameDocument = doc[google.picker.Document.NAME];
         var idDocument = doc[google.picker.Document.ID];
-        console.log(nameDocument);
-        console.log(idDocument)
-        if(documentType === "GoogleSheet"){
-          console.log("Google Sheet")
+
+        google.script.run.withSuccessHandler(function(){
+        
           google.script.run.withSuccessHandler(finished)
-          .withFailureHandler(showError).selectedGoogleSpreadSheet(nameDocument,idDocument);
-        }
-        else{
-          console.log("generic document")
-          google.script.run.withSuccessHandler(finished)
-            .withFailureHandler(showError).selectedGenericSpreadSheet(nameDocument,idDocument);
-          
-        }
+                .withFailureHandler(showError).selectedSpreadSheetFile(idDocument);
+                
+        }).withFailureHandler(showError).checkValid(idDocument);
       }
     }
-    
+
     function finished(data){
       getListActiveMasterDocuments();
     }
@@ -125,8 +119,23 @@
      *
      * @param {string} message The error message to display.
      */
-    function showError(message) {
-      document.getElementById('result').innerHTML = 'Error: ' + message;
+    function showError(messageText,error) {
+      var message = document.getElementById('result');
+      message.classList.remove("error", "alert");
+      if(error === true){
+        message.innerHTML = "success"
+        message.classList.add("alert");
+        setTimeout(function(){ message.style.display = "none" }, 3000);
+      }
+      else{
+        message.innerHTML = 'Error: ' + messageText;
+        message.classList.add("error");
+      }
+      message.addEventListener('click',function(){
+        message.style.display = "none";
+      });
+      message.style.display = "inherit";
+      console.log(messageText);
     }
     
     
@@ -173,14 +182,10 @@
     
     function removeAllActiveDocuments(){
       google.script.run.withSuccessHandler(finished)
-       .withFailureHandler(showError).resetActiveDocuments();
+       .withFailureHandler(showError).resetProperties();
     }
     getListActiveMasterDocuments();
-    function getHelpPage(){
-      alert("First Make sure the document you want have the same column type and are all in a designated folder. \n\n" + 
-      
-      "Then select a document type in the white nav bar and a document ui picker will come up.  Then select the document you want to be merged into. \n\n" +
-      
-      "Once its done you will see a new yellow row on the bottom of the navigation.")
+    function toggleHelpPage(){
+      document.getElementById("helpPage").classList.toggle("hideHelpPage");
     }
   </script>

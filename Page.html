@@ -3,7 +3,6 @@
 <head>
 
   <base target="_top">
-  <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
   <?!= include('styles'); ?>
   <?!= include('key'); ?>
   <?!= include('script'); ?>
@@ -16,17 +15,18 @@
        <span id="reload" onclick="combineData()">&#x21bb;</span>
      </p>
   </div>
-  <div id="result"></div>
+  <div id="result" style="display:none"></div>
   <div id="menuButtons">
     <button class="buttonMain" onclick='getOAuthToken("csv")'>csv</button>
     <button class="buttonMain" onclick='getOAuthToken("xls")'>xls</button>
     <button class="buttonMain" onclick='getOAuthToken("ods")'>ods</button>
     <button class="buttonMain" onclick='getOAuthToken("xlsx")'>xlsx</button>
     <button class="buttonMain" onclick='getOAuthToken("GoogleSheet")'>google sheet</button>
-    <button class="buttonMain" onclick='getHelpPage()'>help</button>
+    <button class="buttonMain" onclick='toggleHelpPage()'>help</button>
   </div>
   <div id="activeMasterDocuments">
   </div>
+  <?!= include('HelpPage'); ?>
   <script src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
 </body>
 </html>
