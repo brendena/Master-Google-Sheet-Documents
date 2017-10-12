@@ -106,6 +106,7 @@
     }
 
     function finished(data){
+      showError("Did it", false);
       getListActiveMasterDocuments();
     }
 
@@ -122,10 +123,10 @@
     function showError(messageText,error) {
       var message = document.getElementById('result');
       message.classList.remove("error", "alert");
-      if(error === true){
+      if(error === false){
         message.innerHTML = "success"
         message.classList.add("alert");
-        setTimeout(function(){ message.style.display = "none" }, 3000);
+        setTimeout(function(){ message.style.display = "none" }, 5000);
       }
       else{
         message.innerHTML = 'Error: ' + messageText;
